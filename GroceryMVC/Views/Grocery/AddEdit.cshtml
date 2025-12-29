@@ -1,0 +1,147 @@
+﻿@model IEnumerable<GroceryMVC.Models.GroceryItem>
+
+@{
+    var title = (Model != null && Model.Any() && Model.First().GroceryId != 0)
+        ? "Edit Grocery"
+        : "Add Grocery";
+}
+
+<h2>@title</h2>
+
+<form method="post" asp-action="AddEdit">
+    <table class="table table-bordered" id="groceryTable">
+        <thead>
+            <tr>
+                <th>Grocery Item</th>
+                <th>Quantity</th>
+                <th>Amount</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                var index = 0;
+                var total = Model.Count();
+                foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <input type="hidden" name="items[@index].GroceryId" value="@item.GroceryId" />
+                            <input name="items[@index].ItemName" class="form-control" value="@item.ItemName" placeholder="Item Name" />
+                        </td>
+                        <td>
+                            <input name="items[@index].Quantity" type="number" class="form-control" value="@item.Quantity" />
+                        </td>
+                        <td>
+                            <input name="items[@index].Amount" type="number" step="0.01" class="form-control" value="@item.Amount" />
+                        </td>
+                        <td>
+                            @if (index == 0 && total == 1)
+                            {
+                                <!-- ✅ First and only row: show + only -->
+                                <button type="button" class="btn btn-success btn-sm addRow">+</button>
+                            }
+                            else if (index == total - 1)
+                            {
+                                <!-- ✅ Last row: show both -->
+                                <button type="button" class="btn btn-danger btn-sm removeRow">×</button>
+                                <button type="button" class="btn btn-success btn-sm addRow">+</button>
+                            }
+                            else
+                            {
+                                <!-- ✅ Middle rows: show only remove -->
+                                <button type="button" class="btn btn-danger btn-sm removeRow">×</button>
+                            }
+                        </td>
+                    </tr>
+                    index++;
+                }
+            }
+            else
+            {
+                <tr>
+                    <td>
+                        <input type="hidden" name="items[0].GroceryId" value="0" />
+                        <input name="items[0].ItemName" class="form-control" placeholder="Item Name" />
+                    </td>
+                    <td>
+                        <input name="items[0].Quantity" type="number" class="form-control" />
+                    </td>
+                    <td>
+                        <input name="items[0].Amount" type="number" step="0.01" class="form-control" />
+                    </td>
+                    <td>
+                        <!-- ✅ First and only row: show + -->
+                        <button type="button" class="btn btn-success btn-sm addRow">+</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+</form>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(function () {
+            let rowIdx = $("#groceryTable tbody tr").length;
+
+            // ✅ Add new row
+            $("#groceryTable").on("click", ".addRow", function () {
+                const newRow = `
+                    <tr>
+                        <td>
+                            <input type="hidden" name="items[${rowIdx}].GroceryId" value="0" />
+                            <input name="items[${rowIdx}].ItemName" class="form-control" placeholder="Item Name" />
+                        </td>
+                        <td>
+                            <input name="items[${rowIdx}].Quantity" type="number" class="form-control" />
+                        </td>
+                        <td>
+                            <input name="items[${rowIdx}].Amount" type="number" step="0.01" class="form-control" />
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm removeRow">×</button>
+                            <button type="button" class="btn btn-success btn-sm addRow">+</button>
+                        </td>
+                    </tr>`;
+
+                // 🔹 Update buttons: all rows except new last one → only remove
+                $("#groceryTable tbody tr td:last").each(function (i, cell) {
+                    const tr = $(cell).closest("tr");
+                    $(cell).html(`<button type="button" class="btn btn-danger btn-sm removeRow">×</button>`);
+                });
+
+                // 🔹 Append new row with + and x
+                $("#groceryTable tbody").append(newRow);
+                rowIdx++;
+            });
+
+            // ✅ Remove row
+            $("#groceryTable").on("click", ".removeRow", function () {
+                $(this).closest("tr").remove();
+
+                const rows = $("#groceryTable tbody tr");
+                rowIdx = rows.length;
+
+                // 🔹 Reset all buttons first
+                rows.each(function (index) {
+                    const td = $(this).find("td:last");
+                    if (rows.length === 1) {
+                        td.html(`<button type="button" class="btn btn-success btn-sm addRow">+</button>`);
+                    } else if (index === rows.length - 1) {
+                        td.html(`
+                            <button type="button" class="btn btn-danger btn-sm removeRow">×</button>
+                            <button type="button" class="btn btn-success btn-sm addRow">+</button>
+                        `);
+                    } else {
+                        td.html(`<button type="button" class="btn btn-danger btn-sm removeRow">×</button>`);
+                    }
+                });
+            });
+        });
+    </script>
+}

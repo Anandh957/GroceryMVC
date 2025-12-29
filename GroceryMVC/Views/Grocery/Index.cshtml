@@ -1,0 +1,83 @@
+﻿@model IEnumerable<GroceryMVC.Models.GroceryItem>
+
+@{
+    ViewData["Title"] = "Grocery List";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Grocery Items</h2>
+    <a asp-action="AddEdit" class="btn btn-primary">Add Grocery</a>
+</div>
+
+<table class="table table-bordered" id="groceryTable">
+    <thead>
+        <tr>
+            <th>Item Name</th>
+            <th>Quantity</th>
+            <th>Amount</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr data-id="@item.GroceryId">
+                <td>@item.ItemName</td>
+                <td>@item.Quantity</td>
+                <td>@item.Amount</td>
+                <td>
+                    <a class="btn btn-warning btn-sm" asp-action="AddEdit" asp-route-id="@item.GroceryId">
+                        Edit
+                    </a>
+                    <button type="button" class="btn btn-danger btn-sm btn-delete" data-id="@item.GroceryId">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $(".btn-delete").click(function () {
+                const id = $(this).data("id");
+                const row = $(this).closest("tr");
+
+                Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#d33",
+                    cancelButtonColor: "#3085d6",
+                    confirmButtonText: "Yes, delete it!"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '@Url.Action("Delete", "Grocery")/' + id,
+                            type: 'POST',
+                            success: function (response) {
+                                if (response.success) {
+                                    Swal.fire("Deleted!", "Grocery item has been deleted.", "success");
+                                    row.remove(); // remove from table without reloading
+                                } else {
+                                    Swal.fire("Error", "Something went wrong!", "error");
+                                }
+                            },
+                            error: function () {
+                                Swal.fire("Error", "Server error while deleting!", "error");
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}
